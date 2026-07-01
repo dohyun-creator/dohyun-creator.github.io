@@ -44,26 +44,37 @@
             border: 1px solid rgba(255, 255, 255, 0.25);
             max-width: 800px;
             width: 90%;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
         /* 1단계: 웰컴 화면 */
+        #welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* [추가] 처음 나타날 때 타이틀 애니메이션 효과 */
         #welcome-screen h1 {
             color: white;
             font-size: 3.5rem;
             margin-bottom: 2rem;
             text-shadow: 2px 4px 10px rgba(0, 0, 0, 0.3);
-            animation: floatText 3s ease-in-out infinite;
+            
+            /* 등장 애니메이션 (0.8초 동안 아래로 스르륵) */
+            animation: titleAppear 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
-        @keyframes floatText {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-12px); }
+        @keyframes titleAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* 시작 버튼 스타일 및 애니메이션 */
@@ -78,6 +89,14 @@
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
+            
+            /* 버튼도 글씨가 뜬 후에 부드럽게 나타나도록 연출 */
+            animation: buttonFadeIn 1s ease forwards;
+        }
+
+        @keyframes buttonFadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
         }
 
         .btn-start:hover {
@@ -87,9 +106,18 @@
             box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
         }
 
-        /* 2단계: 메인 대시보드 (처음엔 숨김) */
+        /* 2단계: 메인 대시보드 (처음엔 완전히 숨김) */
         #main-screen {
             display: none;
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        /* 대시보드가 나타날 때 애니메이션 클래스 */
+        #main-screen.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
         }
 
         #main-screen h2 {
@@ -141,7 +169,7 @@
         }
 
         .card:hover .icon {
-            transform: rotate((5deg)) scale(1.1);
+            transform: rotate(5deg) scale(1.1);
         }
 
         /* 바로가기 추가 양식 */
@@ -193,17 +221,17 @@
 </head>
 <body>
 
-    <!-- 1단계: 웰컴 화면 (처음 띄우는 화면) -->
+    <!-- 1단계: 웰컴 화면 -->
     <div id="welcome-screen" class="container">
         <h1>도현이의 사이트</h1>
         <button class="btn-start" onclick="startApp()">시작</button>
     </div>
 
-    <!-- 2단계: 메인 바로가기 화면 (시작 클릭 후 뜸) -->
+    <!-- 2단계: 메인 바로가기 화면 -->
     <div id="main-screen" class="container">
         <h2>바로가기 대시보드</h2>
         <div class="grid" id="shortcut-grid">
-            <!-- 자바스크립트가 여기에 버튼들을 채워줍니다 -->
+            <!-- 자바스크립트가 바로가기 버튼들을 생성합니다 -->
         </div>
 
         <!-- 새로 추가하는 입력창 -->
@@ -215,7 +243,7 @@
     </div>
 
     <script>
-        // 기본 바로가기 목록 구성
+        // 기본 바로가기 목록
         const defaultShortcuts = [
             { name: '유튜브', url: 'https://www.youtube.com', icon: '📺' },
             { name: '파워포인트', url: 'https://www.microsoft365.com/launch/powerpoint', icon: '📊' },
@@ -224,17 +252,28 @@
             { name: '한글 (한컴독스)', url: 'https://www.hancomdocs.com', icon: '✍️' }
         ];
 
-        // 기존에 추가한 사이트가 브라우저에 저장되어 있다면 가져오고, 없으면 기본값 적용
+        // 데이터 불러오기
         let shortcuts = JSON.parse(localStorage.getItem('myShortcuts')) || defaultShortcuts;
 
-        // 시작 버튼 작동 함수
+        // [수정] 시작 버튼 누르면 화면이 부드럽게 교체되는 함수
         function startApp() {
-            document.getElementById('welcome-screen').style.display = 'none';
-            document.getElementById('main-screen').style.display = 'block';
-            renderShortcuts();
+            const welcome = document.getElementById('welcome-screen');
+            const main = document.getElementById('main-screen');
+            
+            // 웰컴 화면을 스르륵 사라지게 만듦
+            welcome.style.opacity = '0';
+            welcome.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                welcome.style.display = 'none';
+                
+                // 바로가기 대시보드 화면을 띄우고 부드럽게 등장시킴
+                main.classList.add('active');
+                renderShortcuts();
+            }, 400); // 0.4초 후 완전 교체
         }
 
-        // 대시보드 화면에 바로가기 그리기
+        // 화면에 바로가기 렌더링
         function renderShortcuts() {
             const grid = document.getElementById('shortcut-grid');
             grid.innerHTML = '';
@@ -242,7 +281,7 @@
             shortcuts.forEach(item => {
                 const card = document.createElement('a');
                 card.href = item.url;
-                card.target = '_blank'; // 새 탭 열기 키
+                card.target = '_blank';
                 card.className = 'card';
                 
                 card.innerHTML = `
@@ -253,7 +292,7 @@
             });
         }
 
-        // 새로운 바로가기 추가 처리
+        // 새로운 바로가기 추가 함수
         function addNewShortcut() {
             const nameInput = document.getElementById('site-name');
             const urlInput = document.getElementById('site-url');
@@ -266,16 +305,13 @@
                 return;
             }
 
-            // 웹 주소 프로토콜(http) 누락 체크 및 자동 추가
             if (!/^https?:\/\//i.test(url)) {
                 url = 'https://' + url;
             }
 
-            // 데이터 목록 추가 및 로컬 데이터베이스 저장
             shortcuts.push({ name: name, url: url, icon: '🔗' });
             localStorage.setItem('myShortcuts', JSON.stringify(shortcuts));
 
-            // 새로고침 없이 바로 반영 후 입력칸 비우기
             renderShortcuts();
             nameInput.value = '';
             urlInput.value = '';
