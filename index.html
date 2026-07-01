@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html language="ko">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>도현이의 사이트</title>
     <style>
-        /* 기본 스타일 및 배경 애니메이션 */
+        /* 기본 여백 리셋 */
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
             font-family: 'Malgun Gothic', sans-serif;
         }
 
+        /* 4색 그라데이션 애니메이션 배경 */
         body {
             width: 100vw;
             height: 100vh;
@@ -21,104 +22,65 @@
             align-items: center;
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+            animation: gradientMove 12s ease infinite;
             overflow: hidden;
-            color: white;
         }
 
-        @keyframes gradientBG {
+        /* 배경이 움직이는 효과 */
+        @keyframes gradientMove {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* 공통 컨테이너 효과 */
+        /* 중앙 정렬 컨테이너 */
         .container {
             text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.5s ease;
-            max-width: 800px;
-            width: 90%;
         }
 
-        /* 1단계: 웰컴 화면 */
-        #welcome-screen h1 {
-            font-size: 3rem;
+        /* 도현이의 사이트 타이틀 스타일 및 둥둥 떠 있는 애니메이션 */
+        h1 {
+            color: white;
+            font-size: 3.5rem;
             margin-bottom: 2rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            animation: float 3s ease-in-out infinite;
+            text-shadow: 2px 4px 10px rgba(0, 0, 0, 0.3);
+            animation: floatText 3s ease-in-out infinite;
         }
 
-        @keyframes float {
+        @keyframes floatText {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-12px); }
         }
 
+        /* 시작 버튼 스타일 및 마우스 오버 애니메이션 */
         .btn-start {
             font-size: 1.5rem;
-            padding: 0.8rem 2.5rem;
+            font-weight: bold;
+            padding: 1rem 3rem;
             border: none;
             border-radius: 50px;
-            background: white;
             color: #e73c7e;
+            background-color: white;
             cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease; /* 효과가 부드럽게 변하도록 설정 */
         }
 
+        /* 버튼에 마우스를 올렸을 때(Hover) 효과 */
         .btn-start:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(255,255,255,0.4);
-            background: #e73c7e;
+            transform: scale(1.15); /* 크기가 1.15배 커짐 */
+            background-color: #e73c7e;
             color: white;
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
         }
+    </style>
+</head>
+<body>
 
-        /* 2단계: 메인 대시보드 (처음엔 숨김) */
-        #main-screen {
-            display: none;
-        }
+    <div class="container">
+        <h1>도현이의 사이트</h1>
+        <button class="btn-start">시작</button>
+    </div>
 
-        #main-screen h2 {
-            margin-bottom: 1.5rem;
-            font-size: 2rem;
-        }
-
-        /* 바로가기 그리드 */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        /* 바로가기 카드 스타일 및 애니메이션 */
-        .card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 15px;
-            text-decoration: none;
-            color: white;
-            font-weight: bold;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.35);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-            border-color: rgba(255,
+</body>
+</html>
