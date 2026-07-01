@@ -1,319 +1,124 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html language="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오픈 월드 메타버스 스턴트 파크</title>
+    <title>도현이의 사이트</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        #info {
-            position: absolute; top: 10px; left: 10px; color: #2c3e50;
-            background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 12px;
-            pointer-events: none; line-height: 1.6; border: 3px solid #ff3860;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15); z-index: 10;
-        }
-        #speedometer { font-size: 24px; font-weight: bold; color: #ff3860; }
-        
-        #controls {
-            position: absolute; top: 10px; right: 10px;
-            display: flex; flex-direction: column; gap: 10px;
-            z-index: 10;
-        }
-        .btn {
-            background: #209cee; color: white; border: none; padding: 12px 20px;
-            font-size: 14px; font-weight: bold; border-radius: 20px;
-            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-            border-bottom: 4px solid #1473b1;
-        }
-        .btn:hover { background: #118fe4; transform: translateY(-2px); }
-        .btn:active { transform: translateY(2px); border-bottom-width: 1px; }
-        #mapBtn { background: #23d160; border-bottom-color: #1c9e49; }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-</head>
-<body>
-    <div id="info">
-        <h2>🏎️ 오픈월드 정밀 드라이빙 & 스턴트</h2>
-        <p>조작: 키보드 방향키 (↑ ↓ ← →)</p>
-        <p>속도: <span id="speedometer">0</span> 🎈</p>
-        <hr style="border: 0; border-top: 2px solid #ff3860;">
-        <p style="color: #ff3860;">🔓 울타리가 제거되어 마을과 스턴트장이 완전히 연결되었습니다!</p>
-        <p style="color: #209cee;">🕹️ 관성, 제동력, 공중 자세 제어 기능이 대폭 업그레이드되었습니다.</p>
-    </div>
-
-    <div id="controls">
-        <button id="mapBtn" class="btn">🗺️ 전체 맵 보기 (토글)</button>
-        <button id="stuntBtn" class="btn">⚡ 스턴트 존 워프</button>
-    </div>
-
-    <script>
-        // --- 1. 씬 및 기본 세팅 ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xa5f3fc);
-        scene.fog = new THREE.FogExp2(0xa5f3fc, 0.0006);
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 9000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        document.body.appendChild(renderer.domElement);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); scene.add(ambientLight);
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.4); sunLight.position.set(500, 1500, 400); scene.add(sunLight);
-
-        // --- 2. 오픈월드 대지 및 도로망 ---
-        const mapSize = 4500; 
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(mapSize, mapSize), new THREE.MeshStandardMaterial({ color: 0x86efac, roughness: 0.9 }));
-        ground.rotation.x = -Math.PI / 2; scene.add(ground);
-
-        const roadMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 });
-        function buildRoad(x, z, w, l, isV) {
-            const m = new THREE.Mesh(isV ? new THREE.PlaneGeometry(w, l) : new THREE.PlaneGeometry(l, w), roadMat);
-            m.rotation.x = -Math.PI/2; m.position.set(x, 0.05, z); scene.add(m);
-        }
-        buildRoad(0, 0, 50, mapSize, true); buildRoad(0, 0, 50, mapSize, false);
-
-        // --- 3. 자동차 플레이어 세팅 ---
-        const carGroup = new THREE.Group();
-        const chassis = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.3, 5.8), new THREE.MeshStandardMaterial({ color: 0x1e293b })); chassis.position.y = 0.4; carGroup.add(chassis);
-        const carBodyMat = new THREE.MeshStandardMaterial({ color: 0xff3860, roughness: 0.2 });
-        const mainBody = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.8, 5.4), carBodyMat); mainBody.position.set(0, 0.8, 0); carGroup.add(mainBody);
-        const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.7, 2.6), new THREE.MeshStandardMaterial({ color: 0xffffff })); cabin.position.set(0, 1.4, -0.2); carGroup.add(cabin);
-        const frontGlass = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.6), new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1 }));
-        frontGlass.position.set(0, 1.4, -1.51); frontGlass.rotation.x = -Math.PI/6; carGroup.add(frontGlass);
-
-        const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.6, 24); const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
-        const wheels = []; const wPositions = [[-1.6, 0.5, 1.8], [1.6, 0.5, 1.8], [-1.6, 0.5, -1.8], [1.6, 0.5, -1.8]];
-        wPositions.forEach(pos => {
-            const w = new THREE.Mesh(wheelGeo, wheelMat); w.rotation.z = Math.PI / 2; w.position.set(pos[0], pos[1], pos[2]); carGroup.add(w); wheels.push(w);
-        });
-        const light = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.1, 16), new THREE.MeshBasicMaterial({ color: 0xfff9db })); light.rotation.x = Math.PI/2;
-        const lLight = light.clone(); lLight.position.set(-1, 0.8, -2.71); carGroup.add(lLight);
-        const rLight = light.clone(); rLight.position.set(1, 0.8, -2.71); carGroup.add(rLight);
-        const wing = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.1, 0.8), carBodyMat); wing.position.set(0, 1.6, 2.4); carGroup.add(wing);
-
-        carGroup.position.set(0, 0, 150); scene.add(carGroup);
-        const carRadius = 2.5;
-
-        // [정밀 조작을 위한 변수 세분화]
-        let speed = 0; 
-        const maxSpeed = 3.5;       // 최고 속도 상향
-        const accel = 0.08;         // 가속 반응성 증가
-        const friction = 0.015;     // 기본 마찰 저항 (자연스러운 감속)
-        const brakeDecel = 0.12;    // 브레이크(역방향 키) 성능 대폭 강화
-        let turnAngle = 0;          // 조향각 관성 필터링 변수
-        const maxTurnAngle = 0.045; 
-        
-        let carVelocityY = 0; 
-        let isGrounded = true;
-
-        // --- 4. 마을 빌딩숲 스폰 (장해물 전용) ---
-        const buildings = []; const pastelColors = [0xff7675, 0x74b9ff, 0xa29bfe, 0xffeaa7, 0xfab1a0, 0x55efc4];
-        for (let i = 0; i < 150; i++) {
-            let rx = (Math.random() - 0.5) * 3200; let rz = (Math.random() - 0.5) * 3200;
-            if (Math.abs(rx) < 80 || Math.abs(rz) < 80) continue;
-            if (rx > 350 && rz < -350) continue; // 스턴트 존 공간 비우기
-            let rw = 40 + Math.random()*20, rh = 40 + Math.random()*80, rd = 40 + Math.random()*20;
-            const bGroup = new THREE.Group(); bGroup.position.set(rx, 0, rz);
-            const bBody = new THREE.Mesh(new THREE.BoxGeometry(rw, rh, rd), new THREE.MeshStandardMaterial({ color: pastelColors[Math.floor(Math.random()*pastelColors.length)] }));
-            bBody.position.y = rh/2; bGroup.add(bBody); scene.add(bGroup);
-            buildings.push({ minX: rx - rw/2, maxX: rx + rw/2, minZ: rz - rd/2, maxZ: rz + rd/2 });
+        /* 기본 스타일 및 배경 애니메이션 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Malgun Gothic', sans-serif;
         }
 
-        // --- 5. [변경 사항] 울타리가 제거된 오픈 스턴트 존 ---
-        const parkX = 900; const parkZ = -900; const parkSize = 1000;
-        const parkGroup = new THREE.Group(); parkGroup.position.set(parkX, 0, parkZ);
-
-        // 오픈 구역 경계 바닥 (부드러운 라벤더 핑크빛)
-        const floor = new THREE.Mesh(new THREE.PlaneGeometry(parkSize, parkSize), new THREE.MeshStandardMaterial({ color: 0xfae8ff, roughness: 0.85 }));
-        floor.rotation.x = -Math.PI / 2; floor.position.y = 0.02; parkGroup.add(floor);
-
-        // ★ CRITICAL: 사방을 가로막던 대형 파란색 장벽(addParkWall 함수 체계)을 완벽히 제거함!
-
-        // --- 다중 점프대 세팅 동일 유지 ---
-        const jumpRamps = [];
-        function placeJumper(x, z, w, l, h, angleX, color, id) {
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 1, l), new THREE.MeshStandardMaterial({ color: color, roughness: 0.3 }));
-            mesh.rotation.x = angleX; mesh.position.set(x, h, z); parkGroup.add(mesh);
-            jumpRamps.push({ x: parkX + x, z: parkZ + z, radius: l/2 + 12, powerY: angleX * -1.3, speedUp: 1.2, id: id });
+        body {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow: hidden;
+            color: white;
         }
 
-        placeJumper(0, 150, 70, 200, 20, -Math.PI / 8, 0xf97316, 'giant');        // 메인 오렌지
-        placeJumper(-250, 250, 60, 70, 18, -Math.PI / 3.8, 0xa855f7, 'vertical');  // 퍼플 수직
-        placeJumper(250, 250, 50, 120, 10, -Math.PI / 14, 0xeab308, 'long');       // 옐로우 고속
-        placeJumper(-300, -150, 45, 90, 12, -Math.PI / 9, 0x14b8a6, 'twist');      // 민트 트위스트
-        placeJumper(300, -150, 45, 80, 15, -Math.PI / 5, 0xec4899, 'flip');        // 핑크 백플립
-        placeJumper(-80, -300, 35, 60, 6, -Math.PI / 10, 0x3b82f6, 'miniA');       // 미니블루 A
-        placeJumper(80, -300, 35, 60, 6, -Math.PI / 10, 0x3b82f6, 'miniB');       // 미니블루 B
-
-        // 루프 코스 및 목표 링
-        const loopRadius = 45; const loopGroup = new THREE.Group(); loopGroup.position.set(0, 0, -20);
-        for (let i = 0; i <= 40; i++) {
-            const a = (i / 40) * Math.PI * 2 - Math.PI/2;
-            const seg = new THREE.Mesh(new THREE.BoxGeometry(35, 2, 12), new THREE.MeshStandardMaterial({ color: 0x3b82f6 }));
-            seg.position.set(0, Math.sin(a)*loopRadius + loopRadius, Math.cos(a)*loopRadius); seg.rotation.x = -a; loopGroup.add(seg);
-        }
-        parkGroup.add(loopGroup);
-
-        const ringGroup = new THREE.Group(); ringGroup.position.set(0, 110, -260);
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(22, 4, 12, 32), new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xfacc15, emissiveIntensity: 0.3 }));
-        ringGroup.add(ring); parkGroup.add(ringGroup);
-
-        scene.add(parkGroup);
-
-        // --- 6. 입력 장치 핸들러 ---
-        const keys = { Up: false, Down: false, Left: false, Right: false };
-        let isMapView = false;
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowUp') keys.Up = true; if (e.key === 'ArrowDown') keys.Down = true;
-            if (e.key === 'ArrowLeft') keys.Left = true; if (e.key === 'ArrowRight') keys.Right = true;
-        });
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowUp') keys.Up = false; if (e.key === 'ArrowDown') keys.Down = false;
-            if (e.key === 'ArrowLeft') keys.Left = false; if (e.key === 'ArrowRight') keys.Right = false;
-        });
-
-        const mapBtn = document.getElementById('mapBtn');
-        const stuntBtn = document.getElementById('stuntBtn');
-
-        mapBtn.addEventListener('click', () => {
-            isMapView = !isMapView;
-            mapBtn.innerText = isMapView ? "🚗 타운 드라이브 뷰" : "🗺️ 전체 맵 보기 (토글)";
-            mapBtn.style.backgroundColor = isMapView ? "#ff3860" : "#23d160";
-        });
-
-        stuntBtn.addEventListener('click', () => {
-            speed = 0; turnAngle = 0;
-            carGroup.position.set(parkX, 2, parkZ + 450); // 탁 트인 스턴트 구역 남쪽 진입로 지점으로 워프
-            carGroup.rotation.set(0, Math.PI, 0); 
-            if(isMapView) mapBtn.click();
-        });
-
-        // --- 7. 정밀 물리 시뮬레이션 및 메인 루프 ---
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // [정밀 조작 1: 속도 가속/제동 시뮬레이션 분리]
-            if (isGrounded) {
-                if (keys.Up) {
-                    // 전진 가속
-                    if (speed < 0) speed += brakeDecel; // 후진 중 앞키 누르면 빠른 제동
-                    else speed = Math.min(speed + accel, maxSpeed);
-                } else if (keys.Down) {
-                    // 브레이크 및 후진
-                    if (speed > 0) speed = Math.max(speed - brakeDecel, -0.5); // 전진 중 뒷키 누르면 강력한 브레이크
-                    else speed = Math.max(speed - accel, -maxSpeed/2);
-                } else {
-                    // 관성 감속 (엑셀을 뗐을 때 자연스럽게 멈춤)
-                    if (speed > 0) speed = Math.max(speed - friction, 0);
-                    if (speed < 0) speed = Math.min(speed + friction, 0);
-                }
-            }
-
-            // [정밀 조작 2: 조향(핸들링) 관성 필터링]
-            // 키를 눌렀을 때 즉시 꺾이는 게 아니라 아날로그 핸들처럼 부드럽게 각도가 차오름
-            if (isGrounded && speed !== 0) {
-                const directionModifier = speed > 0 ? 1 : -1;
-                if (keys.Left) {
-                    turnAngle = Math.min(turnAngle + 0.005, maxTurnAngle);
-                    carGroup.rotation.y += turnAngle * directionModifier;
-                } else if (keys.Right) {
-                    turnAngle = Math.min(turnAngle + 0.005, maxTurnAngle);
-                    carGroup.rotation.y -= turnAngle * directionModifier;
-                } else {
-                    turnAngle = Math.max(turnAngle - 0.008, 0); // 키를 떼면 핸들이 정면으로 복귀
-                }
-            }
-
-            // 바퀴 회전
-            wheels.forEach(w => { w.rotation.x -= speed * 0.4; });
-
-            // 실제 위치 이동 및 이전 좌표 백업 (마을 건물 충돌용)
-            const oldPos = carGroup.position.clone();
-            carGroup.translateZ(-speed);
-
-            // 마을 건물 충돌 검사
-            let collided = false;
-            for (let i = 0; i < buildings.length; i++) {
-                let b = buildings[i];
-                if (carGroup.position.x + carRadius > b.minX && carGroup.position.x - carRadius < b.maxX &&
-                    carGroup.position.z + carRadius > b.minZ && carGroup.position.z - carRadius < b.maxZ) {
-                    collided = true; break;
-                }
-            }
-            if (collided) { 
-                carGroup.position.copy(oldPos); 
-                speed = -speed * 0.25; // 부드러운 반동 충돌 처리
-            }
-
-            // [점프대 물리 감지]
-            if (isGrounded && keys.Up) {
-                for (let i = 0; i < jumpRamps.length; i++) {
-                    let ramp = jumpRamps[i];
-                    let dist = carGroup.position.distanceTo(new THREE.Vector3(ramp.x, carGroup.position.y, ramp.z));
-                    if (dist < ramp.radius) {
-                        isGrounded = false;
-                        
-                        // 각 점프대 고유 수치 매칭
-                        if (ramp.id === 'vertical') { carVelocityY = 4.4; speed = 0.5; } 
-                        else if (ramp.id === 'long') { carVelocityY = 1.2; speed = 4.6; } 
-                        else if (ramp.id === 'flip') { carVelocityY = 3.3; speed = 2.0; } 
-                        else { carVelocityY = ramp.powerY * 4.4; speed *= ramp.speedUp; }
-                        break;
-                    }
-                }
-            }
-
-            ringGroup.rotation.y += 0.02;
-
-            // [정밀 조작 3: 공중 에어 컨트롤 (자세 제어)]
-            // 차가 공중에 떠 있을 때 방향키를 누르면 비행기처럼 공중 자세를 미세조정할 수 있음!
-            if (!isGrounded) {
-                carGroup.position.y += carVelocityY;
-                carVelocityY -= 0.06; // 중력 가속도
-
-                if (keys.Left) carGroup.rotation.z += 0.02;   // 공중 좌롤링
-                if (keys.Right) carGroup.rotation.z -= 0.02;  // 공중 우롤링
-                if (keys.Up) carGroup.rotation.x -= 0.015;    // 공중 피치 다운
-                if (keys.Down) carGroup.rotation.x += 0.015;  // 공중 피치 업
-
-                // 기본 스턴트 자동 회전값 보정
-                carGroup.rotation.y += 0.01; 
-
-                // 착지 판정
-                if (carGroup.position.y <= 0) {
-                    carGroup.position.y = 0; 
-                    carGroup.rotation.x = 0; 
-                    carGroup.rotation.z = 0; // 지면에 닿으면 각도 수평 리셋
-                    carVelocityY = 0; 
-                    isGrounded = true;
-                }
-            }
-
-            // 카메라 리얼 타임 뷰
-            if (isMapView) {
-                camera.position.set(carGroup.position.x, 1500, carGroup.position.z);
-                camera.lookAt(carGroup.position.x, 0, carGroup.position.z);
-                camera.up.set(0, 0, -1);
-            } else {
-                camera.up.set(0, 1, 0);
-                const relOffset = new THREE.Vector3(0, 5, 15);
-                const camOffset = relOffset.applyMatrix4(carGroup.matrixWorld);
-                camera.position.copy(camOffset);
-                camera.lookAt(new THREE.Vector3(carGroup.position.x, carGroup.position.y + 1.2, carGroup.position.z));
-            }
-
-            document.getElementById("speedometer").innerText = Math.round(Math.abs(speed) * 95);
-            renderer.render(scene, camera);
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        /* 공통 컨테이너 효과 */
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.5s ease;
+            max-width: 800px;
+            width: 90%;
+        }
 
-        animate();
-    </script>
-</body>
-</html>
+        /* 1단계: 웰컴 화면 */
+        #welcome-screen h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .btn-start {
+            font-size: 1.5rem;
+            padding: 0.8rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            background: white;
+            color: #e73c7e;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-start:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.4);
+            background: #e73c7e;
+            color: white;
+        }
+
+        /* 2단계: 메인 대시보드 (처음엔 숨김) */
+        #main-screen {
+            display: none;
+        }
+
+        #main-screen h2 {
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        /* 바로가기 그리드 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        /* 바로가기 카드 스타일 및 애니메이션 */
+        .card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            border-color: rgba(255,
