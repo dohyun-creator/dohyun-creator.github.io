@@ -13,7 +13,7 @@
             font-family: 'Malgun Gothic', sans-serif;
         }
 
-        /* [유지] 화려한 4색 그라데이션 애니메이션 배경 */
+        /* 처음 웰컴 화면: 화려한 그라데이션 애니메이션 */
         body {
             width: 100vw;
             height: 100vh;
@@ -24,7 +24,7 @@
             background-size: 400% 400%;
             animation: gradientMove 12s ease infinite;
             overflow: hidden;
-            transition: background 0.5s ease; /* 화면 전환 시 배경 변화를 부드럽게 */
+            transition: background 0.6s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         @keyframes gradientMove {
@@ -33,10 +33,10 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* [변경] body에 .white-bg 클래스가 붙으면 하얀색 배경으로 바뀜 */
-        body.white-bg {
-            background: linear-gradient(-45deg, #f9f9f9, #f0f2f5, #eef2f7, #f5f7fa);
-            background-size: 400% 400%;
+        /* 대시보드로 바뀔 때 깨끗한 흰색 배경 */
+        body.dashboard-mode {
+            background: #ffffff !important;
+            animation: none;
         }
 
         /* 공통 컨테이너 효과 */
@@ -45,10 +45,10 @@
             border-radius: 24px;
             max-width: 850px;
             width: 90%;
-            transition: opacity 0.5s ease, transform 0.5s ease;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
 
-        /* 1단계: 웰컴 화면용 반투명 유리창 스타일 */
+        /* 1단계: 웰컴 화면용 반투명 유리창 */
         #welcome-screen.container {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
@@ -57,7 +57,7 @@
             border: 1px solid rgba(255, 255, 255, 0.25);
         }
 
-        /* 처음 나타날 때 타이틀 애니메이션 효과 */
+        /* 도현이의 사이트 타이틀 애니메이션 */
         #welcome-screen h1 {
             color: white;
             font-size: 3.5rem;
@@ -67,17 +67,11 @@
         }
 
         @keyframes titleAppear {
-            0% {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            0% { opacity: 0; transform: translateY(-30px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* 시작 버튼 스타일 및 애니메이션 */
+        /* 시작 버튼 */
         .btn-start {
             font-size: 1.5rem;
             font-weight: bold;
@@ -89,12 +83,6 @@
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
-            animation: buttonFadeIn 1s ease forwards;
-        }
-
-        @keyframes buttonFadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
         }
 
         .btn-start:hover {
@@ -109,22 +97,46 @@
             display: none;
             opacity: 0;
             transform: scale(0.95);
+            position: relative;
         }
 
-        /* [변경] 대시보드용 깔끔한 화이트 창 스타일 */
+        /* 대시보드 화면용 하얀 패널 */
         #main-screen.container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            padding: 3rem;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            padding: 4rem 2rem 2rem 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            border: 1px solid #eeeeee;
         }
 
-        /* 대시보드가 나타날 때 애니메이션 클래스 */
         #main-screen.active {
             display: block;
             opacity: 1;
             transform: scale(1);
+        }
+
+        /* 메인 홈 버튼 스타일 */
+        .btn-home {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #555;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-home:hover {
+            background-color: #e5e5e5;
+            color: #000;
+            transform: translateY(-1px);
         }
 
         #main-screen h2 {
@@ -140,12 +152,12 @@
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 1.2rem;
             margin-bottom: 2rem;
-            max-height: 420px;
+            max-height: 400px;
             overflow-y: auto;
             padding: 10px;
         }
 
-        /* 바로가기 개별 카드 (하얀 배경 스타일) */
+        /* 바로가기 개별 카드 */
         .card {
             background: #ffffff;
             padding: 1.5rem 1rem;
@@ -164,13 +176,12 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
         }
 
-        /* 카드 마우스 호버 애니메이션 효과 */
         .card:hover {
             transform: translateY(-6px);
-            background: #ffffff;
-            color: #000;
+            background: #fafafa;
+            color: #4285f4;
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-            border-color: #4285f4; /* 호버 시 구글 블루 색상 테두리 */
+            border-color: #4285f4;
         }
 
         .card .icon {
@@ -232,20 +243,18 @@
 </head>
 <body>
 
-    <!-- 1단계: 웰컴 화면 -->
     <div id="welcome-screen" class="container">
         <h1>도현이의 사이트</h1>
         <button class="btn-start" onclick="startApp()">시작</button>
     </div>
 
-    <!-- 2단계: 메인 바로가기 화면 -->
     <div id="main-screen" class="container">
+        <button class="btn-home" onclick="goHome()">🏠 메인 홈</button>
+        
         <h2>바로가기 대시보드</h2>
         <div class="grid" id="shortcut-grid">
-            <!-- 자바스크립트가 바로가기 버튼들을 나열합니다 -->
-        </div>
+            </div>
 
-        <!-- 새로 추가하는 입력창 -->
         <div class="add-form">
             <input type="text" id="site-name" placeholder="사이트 이름 입력" required>
             <input type="url" id="site-url" placeholder="주소 입력 (https://...)" required>
@@ -254,7 +263,7 @@
     </div>
 
     <script>
-        // 구글 워크스페이스 앱 세분화 목록 구조 유지
+        // 기본 바로가기 데이터 세팅
         const defaultShortcuts = [
             { name: '유튜브', url: 'https://www.youtube.com', icon: '📺' },
             { name: '파워포인트', url: 'https://www.microsoft365.com/launch/powerpoint', icon: '📊' },
@@ -270,7 +279,7 @@
 
         let shortcuts = JSON.parse(localStorage.getItem('myShortcuts')) || defaultShortcuts;
 
-        // 시작 버튼 작동 함수 (화면 전환 + 배경색 전환 추가)
+        // 시작 버튼 클릭: 대시보드로 이동
         function startApp() {
             const welcome = document.getElementById('welcome-screen');
             const main = document.getElementById('main-screen');
@@ -280,16 +289,19 @@
             
             setTimeout(() => {
                 welcome.style.display = 'none';
-                
-                // [추가] 바로가기 화면으로 넘어갈 때 배경을 하얀색 톤으로 변경
-                document.body.classList.add('white-bg');
-                
+                document.body.classList.add('dashboard-mode');
                 main.classList.add('active');
                 renderShortcuts();
             }, 400);
         }
 
-        // 화면에 바로가기 렌더링
+        // [변경] 메인 홈 버튼 클릭 시 작동하는 기능 수정
+        function goHome() {
+            // 현재 창을 브라우저의 아예 비어있는 새 페이지(about:blank)로 이동시킵니다.
+            window.location.href = 'about:blank';
+        }
+
+        // 화면에 바로가기 그리기 (현재 페이지에서 직접 이동)
         function renderShortcuts() {
             const grid = document.getElementById('shortcut-grid');
             grid.innerHTML = '';
@@ -297,7 +309,7 @@
             shortcuts.forEach(item => {
                 const card = document.createElement('a');
                 card.href = item.url;
-                card.target = '_blank';
+                card.target = '_self'; // 현재 페이지에서 이동
                 card.className = 'card';
                 
                 card.innerHTML = `
