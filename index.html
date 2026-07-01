@@ -33,13 +33,27 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* 중앙 정렬 컨테이너 */
+        /* 공통 컨테이너 효과 (유리 느낌 창) */
         .container {
             text-align: center;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            max-width: 800px;
+            width: 90%;
+            animation: fadeIn 0.8s ease-out;
         }
 
-        /* 도현이의 사이트 타이틀 스타일 및 둥둥 떠 있는 애니메이션 */
-        h1 {
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* 1단계: 웰컴 화면 */
+        #welcome-screen h1 {
             color: white;
             font-size: 3.5rem;
             margin-bottom: 2rem;
@@ -52,7 +66,7 @@
             50% { transform: translateY(-12px); }
         }
 
-        /* 시작 버튼 스타일 및 마우스 오버 애니메이션 */
+        /* 시작 버튼 스타일 및 애니메이션 */
         .btn-start {
             font-size: 1.5rem;
             font-weight: bold;
@@ -63,24 +77,209 @@
             background-color: white;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease; /* 효과가 부드럽게 변하도록 설정 */
+            transition: all 0.3s ease;
         }
 
-        /* 버튼에 마우스를 올렸을 때(Hover) 효과 */
         .btn-start:hover {
-            transform: scale(1.15); /* 크기가 1.15배 커짐 */
+            transform: scale(1.15);
             background-color: #e73c7e;
             color: white;
             box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
+        }
+
+        /* 2단계: 메인 대시보드 (처음엔 숨김) */
+        #main-screen {
+            display: none;
+        }
+
+        #main-screen h2 {
+            color: white;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* 바로가기 그리드 패널 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            max-height: 380px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        /* 바로가기 개별 카드 및 호버 애니메이션 */
+        .card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.05);
+            background: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .card .icon {
+            font-size: 2.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .icon {
+            transform: rotate((5deg)) scale(1.1);
+        }
+
+        /* 바로가기 추가 양식 */
+        .add-form {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .add-form input {
+            padding: 0.7rem 1rem;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            background: rgba(255,255,255,0.85);
+            color: #333;
+            font-size: 0.95rem;
+            width: 200px;
+            transition: all 0.3s;
+        }
+
+        .add-form input:focus {
+            background: white;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .add-form button {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: #23a6d5;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .add-form button:hover {
+            background: #197da2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <!-- 1단계: 웰컴 화면 (처음 띄우는 화면) -->
+    <div id="welcome-screen" class="container">
         <h1>도현이의 사이트</h1>
-        <button class="btn-start">시작</button>
+        <button class="btn-start" onclick="startApp()">시작</button>
     </div>
 
+    <!-- 2단계: 메인 바로가기 화면 (시작 클릭 후 뜸) -->
+    <div id="main-screen" class="container">
+        <h2>바로가기 대시보드</h2>
+        <div class="grid" id="shortcut-grid">
+            <!-- 자바스크립트가 여기에 버튼들을 채워줍니다 -->
+        </div>
+
+        <!-- 새로 추가하는 입력창 -->
+        <div class="add-form">
+            <input type="text" id="site-name" placeholder="사이트 이름 입력" required>
+            <input type="url" id="site-url" placeholder="주소 입력 (https://...)" required>
+            <button onclick="addNewShortcut()">추가하기</button>
+        </div>
+    </div>
+
+    <script>
+        // 기본 바로가기 목록 구성
+        const defaultShortcuts = [
+            { name: '유튜브', url: 'https://www.youtube.com', icon: '📺' },
+            { name: '파워포인트', url: 'https://www.microsoft365.com/launch/powerpoint', icon: '📊' },
+            { name: '제미니', url: 'https://gemini.google.com', icon: '✨' },
+            { name: '구글 워크스페이스', url: 'https://workspace.google.com', icon: '💼' },
+            { name: '한글 (한컴독스)', url: 'https://www.hancomdocs.com', icon: '✍️' }
+        ];
+
+        // 기존에 추가한 사이트가 브라우저에 저장되어 있다면 가져오고, 없으면 기본값 적용
+        let shortcuts = JSON.parse(localStorage.getItem('myShortcuts')) || defaultShortcuts;
+
+        // 시작 버튼 작동 함수
+        function startApp() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('main-screen').style.display = 'block';
+            renderShortcuts();
+        }
+
+        // 대시보드 화면에 바로가기 그리기
+        function renderShortcuts() {
+            const grid = document.getElementById('shortcut-grid');
+            grid.innerHTML = '';
+
+            shortcuts.forEach(item => {
+                const card = document.createElement('a');
+                card.href = item.url;
+                card.target = '_blank'; // 새 탭 열기 키
+                card.className = 'card';
+                
+                card.innerHTML = `
+                    <div class="icon">${item.icon || '🔗'}</div>
+                    <div>${item.name}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 새로운 바로가기 추가 처리
+        function addNewShortcut() {
+            const nameInput = document.getElementById('site-name');
+            const urlInput = document.getElementById('site-url');
+
+            let name = nameInput.value.trim();
+            let url = urlInput.value.trim();
+
+            if(!name || !url) {
+                alert('이름과 주소를 모두 입력하세요!');
+                return;
+            }
+
+            // 웹 주소 프로토콜(http) 누락 체크 및 자동 추가
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+            }
+
+            // 데이터 목록 추가 및 로컬 데이터베이스 저장
+            shortcuts.push({ name: name, url: url, icon: '🔗' });
+            localStorage.setItem('myShortcuts', JSON.stringify(shortcuts));
+
+            // 새로고침 없이 바로 반영 후 입력칸 비우기
+            renderShortcuts();
+            nameInput.value = '';
+            urlInput.value = '';
+        }
+    </script>
 </body>
 </html>
